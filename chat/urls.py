@@ -18,5 +18,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('text_chat.urls'))
+    path('', include('text_chat.urls')),
+    path('call/', include('voice_and_video_call.urls'))
 ]
