@@ -1,5 +1,5 @@
 let msg_interface = $('.container-fluid')
-let callButton = $('.fa-phone')
+let callButton = $('.fa-video')
 let input_message = $('#input-message')
 let message_body = $('.msg_card_body')
 let send_message_form = $('#send-message-form')
