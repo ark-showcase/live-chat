@@ -1,4 +1,5 @@
-
+let msg_interface = $('.container-fluid')
+let callButton = $('.fa-phone')
 let input_message = $('#input-message')
 let message_body = $('.msg_card_body')
 let send_message_form = $('#send-message-form')
@@ -32,9 +33,11 @@ socket.onopen = async function(e) {
             send_to = 1
         }
         let data = {
+            'message_type': 'text',
             'message': message,
             'sent_by': USER_ID,
-            'send_to': send_to
+            'send_to': send_to,
+            'channel': ''
         }
         data = JSON.stringify(data)
 
@@ -42,15 +45,38 @@ socket.onopen = async function(e) {
 
         $(this)[0].reset()
     })
+
+    // Add event listener to the button
+    callButton.on('click', function(e) {
+        e.preventDefault()
+        // Assuming USER_ID and send_to are defined somewhere in your code
+        if(USER_ID == 1){
+            send_to = 2
+        }
+        else{
+            send_to = 1
+        }
+
+        // Call handleSubmit function with USER_ID and send_to parameters
+        handleSubmit(USER_ID, send_to);
+    })
 }
 
 socket.onmessage = async function(e){
     console.log('message', e)
     let data = JSON.parse(e.data)
     let message = data['message']
+    let message_type = data['message_type']
     let sent_by_id = data['sent_by']
+    let send_to = data['send_to']
+    let channel = data['channel']
     console.log('message', message)
-    newMessage(message, sent_by_id)
+    if(send_to===USER_ID && message_type==='call'){
+        handleSubmit2(send_to, sent_by_id, channel)
+    }
+    else{
+        newMessage(message, sent_by_id)
+    }
 
 }
 
@@ -107,3 +133,97 @@ function newMessage(message, sent_by_id, thread_id) {
     }, 100);
 	input_message.val(null);
 }
+
+
+
+
+// the below code fragment for calling:
+
+let handleSubmit = async (sent_by, send_to) => {
+        let room = sent_by + ' ' + 'to' + send_to
+        let name = sent_by
+
+        let response = await fetch(`/call/get_token/?channel=${room}`)
+        let data_c = await response.json()
+
+        let UID = data_c.uid
+        let token = data_c.token
+        let appId = data_c.appId
+
+        sessionStorage.setItem('UID', UID)
+        sessionStorage.setItem('token', token)
+        sessionStorage.setItem('appId', appId)
+        sessionStorage.setItem('room', room)
+        sessionStorage.setItem('name', name)
+
+        let message = input_message.val()
+        if(USER_ID == 1){
+            send_to = 2
+        }
+        else{
+            send_to = 1
+        }
+        let data = {
+            'message_type': 'call',
+            'message': '',
+            'sent_by': sent_by,
+            'send_to': send_to,
+            'channel': room
+        }
+        data = JSON.stringify(data)
+
+        socket.send(data)
+
+//        window.open('/call/room/', '_self')
+        window.open('/call/room/', 'MyWindow', 'width=600,height=400')
+    }
+
+
+
+let handleSubmit2 = async (send_to, sent_by, channel) => {
+        let room = channel
+        let name = send_to
+
+        let response = await fetch(`/call/get_token/?channel=${room}`)
+        let data_c = await response.json()
+
+        let UID = data_c.uid
+        let token = data_c.token
+        let appId = data_c.appId
+
+        sessionStorage.setItem('UID', UID)
+        sessionStorage.setItem('token', token)
+        sessionStorage.setItem('appId', appId)
+        sessionStorage.setItem('room', room)
+        sessionStorage.setItem('name', name)
+        console.log("channel: ", room)
+//        msg_interface.html(`<div style="font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0;">
+//    <div class="call-interface" style="background-color: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
+//        <h2>Incoming Call</h2>
+//        <p>You have an incoming call from:</p>
+//        <h3 id="callerName">John Doe</h3>
+//        <button onclick="window.open('/call/room/', '_self')" style="padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Answer</button>
+//        <button onclick="window.open('/person${name}/', '_self')" style="padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Reject</button>
+//    </div>
+//</div>`);
+//        window.open('/call/room/', '_self')
+
+        Swal.fire({
+          title: 'Incoming Call',
+          text: 'Do you want to answer the call?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Answer',
+          cancelButtonText: 'Reject'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Handle answer call action
+            console.log('Call answered');
+            window.open('/call/room/', 'MyWindow', 'width=600,height=400');
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Handle reject call action
+            console.log('Call rejected');
+          }
+        });
+
+    }

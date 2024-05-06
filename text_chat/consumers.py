@@ -32,9 +32,11 @@ class ChatConsumer(AsyncConsumer):
         print('receive', event)
         received_data = json.loads(event['text'])
         msg = received_data.get('message')
+        msg_type = received_data.get('message_type')
         sent_by_id = received_data.get('sent_by')
         sent_to_id = received_data.get('send_to')
-        if not msg:
+        channel = received_data.get('channel')
+        if not msg_type:
             print('ERROR:: empty message')
             return False
 
@@ -51,7 +53,10 @@ class ChatConsumer(AsyncConsumer):
 
         response = {
             'message': msg,
-            'sent_by': self_user
+            'message_type': msg_type,
+            'sent_by': self_user,
+            'send_to': sent_to_user,
+            'channel': channel
         }
 
         await self.channel_layer.group_send(

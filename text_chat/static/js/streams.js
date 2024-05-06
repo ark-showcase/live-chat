@@ -7,7 +7,7 @@ let NAME = sessionStorage.getItem('name')
 
 const client = AgoraRTC.createClient({mode:'rtc', codec:'vp8'})
 
-let localTracks
+let localTracks = []
 let remoteUsers = {}
 
 let joinAndDisplayLocalStream = async () => {
@@ -20,10 +20,10 @@ let joinAndDisplayLocalStream = async () => {
         UID = await client.join(APP_ID, CHANNEL, TOKEN, UID)
     }catch(error){
         console.error(error)
-        window.open('/call/', '_self')
+        window.close();
     }
 
-      localTracks = await AgoraRTC.createMicrophoneAudioTrack()
+      localTracks = await AgoraRTC.createMicrophoneAndCameraTracks()
 //    try {
 //      const localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
 //      // Proceed with using the localTracks (e.g., play video/audio)
@@ -39,8 +39,8 @@ let joinAndDisplayLocalStream = async () => {
                   </div>`
 
     document.getElementById('video-streams').insertAdjacentHTML('beforeend', player)
-    localTracks.play(`user-${UID}`)
-    await client.publish(localTracks)
+    localTracks[1].play(`user-${UID}`)
+    await client.publish([localTracks[0], localTracks[1]])
 }
 
 let handleUserJoined = async (user, mediaType) => {
@@ -65,24 +65,7 @@ let handleUserJoined = async (user, mediaType) => {
     }
 
     if (mediaType === 'audio'){
-
-
-        let player = document.getElementById(`user-container-${user.uid}`)
-        if (player != null){
-            player.remove()
-        }
-
-        let member = await getMember(user)
-
-        player = `<div  class="video-container" id="user-container-${user.uid}">
-            <div class="video-player" id="user-${user.uid}"></div>
-            <div class="username-wrapper"><span class="user-name">${member.name}</span></div>
-        </div>`
-
-        document.getElementById('video-streams').insertAdjacentHTML('beforeend', player)
-
-
-        user.audioTrack.play(`user-${user.uid}`)
+        user.audioTrack.play()
     }
 }
 
@@ -92,33 +75,35 @@ let handleUserLeft = async (user) => {
 }
 
 let leaveAndRemoveLocalStream = async () => {
-        localTracks.stop()
-        localTracks.close()
+    for (let i=0; localTracks.length > i; i++){
+        localTracks[i].stop()
+        localTracks[i].close()
+    }
 
     await client.leave()
     //This is somewhat of an issue because if user leaves without actaull pressing leave button, it will not trigger
     deleteMember()
-    window.open('/call/', '_self')
+    window.close();
 }
 
-//let toggleCamera = async (e) => {
-//    console.log('TOGGLE CAMERA TRIGGERED')
-//    if(localTracks[1].muted){
-//        await localTracks[1].setMuted(false)
-//        e.target.style.backgroundColor = '#fff'
-//    }else{
-//        await localTracks[1].setMuted(true)
-//        e.target.style.backgroundColor = 'rgb(255, 80, 80, 1)'
-//    }
-//}
+let toggleCamera = async (e) => {
+    console.log('TOGGLE CAMERA TRIGGERED')
+    if(localTracks[1].muted){
+        await localTracks[1].setMuted(false)
+        e.target.style.backgroundColor = '#fff'
+    }else{
+        await localTracks[1].setMuted(true)
+        e.target.style.backgroundColor = 'rgb(255, 80, 80, 1)'
+    }
+}
 
 let toggleMic = async (e) => {
     console.log('TOGGLE MIC TRIGGERED')
-    if(localTracks.muted){
-        await localTracks.setMuted(false)
+    if(localTracks[0].muted){
+        await localTracks[0].setMuted(false)
         e.target.style.backgroundColor = '#fff'
     }else{
-        await localTracks.setMuted(true)
+        await localTracks[0].setMuted(true)
         e.target.style.backgroundColor = 'rgb(255, 80, 80, 1)'
     }
 }
@@ -137,7 +122,7 @@ let createMember = async () => {
 
 
 let getMember = async (user) => {
-    let response = await fetch(`/get_member/?UID=${user.uid}&room_name=${CHANNEL}`)
+    let response = await fetch(`/call/get_member/?UID=${user.uid}&room_name=${CHANNEL}`)
     let member = await response.json()
     return member
 }
@@ -158,5 +143,5 @@ window.addEventListener("beforeunload",deleteMember);
 joinAndDisplayLocalStream()
 
 document.getElementById('leave-btn').addEventListener('click', leaveAndRemoveLocalStream)
-//document.getElementById('camera-btn').addEventListener('click', toggleCamera)
+document.getElementById('camera-btn').addEventListener('click', toggleCamera)
 document.getElementById('mic-btn').addEventListener('click', toggleMic)
