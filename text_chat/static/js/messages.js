@@ -1,5 +1,6 @@
 let msg_interface = $('.container-fluid')
-let callButton = $('.fa-video')
+let audioCallButton = $('.fa-phone')
+let videoCallButton = $('.fa-video')
 let input_message = $('#input-message')
 let message_body = $('.msg_card_body')
 let send_message_form = $('#send-message-form')
@@ -37,7 +38,8 @@ socket.onopen = async function(e) {
             'message': message,
             'sent_by': USER_ID,
             'send_to': send_to,
-            'channel': ''
+            'channel': '',
+            'call_type': ''
         }
         data = JSON.stringify(data)
 
@@ -46,8 +48,8 @@ socket.onopen = async function(e) {
         $(this)[0].reset()
     })
 
-    // Add event listener to the button
-    callButton.on('click', function(e) {
+    // Add event listener to the audio call button
+    audioCallButton.on('click', function(e) {
         e.preventDefault()
         // Assuming USER_ID and send_to are defined somewhere in your code
         if(USER_ID == 1){
@@ -57,8 +59,27 @@ socket.onopen = async function(e) {
             send_to = 1
         }
 
+        let call_type = 'audio'
+
         // Call handleSubmit function with USER_ID and send_to parameters
-        handleSubmit(USER_ID, send_to);
+        handleSubmit(USER_ID, send_to, call_type);
+    })
+
+    // Add event listener to the video call button
+    videoCallButton.on('click', function(e) {
+        e.preventDefault()
+        // Assuming USER_ID and send_to are defined somewhere in your code
+        if(USER_ID == 1){
+            send_to = 2
+        }
+        else{
+            send_to = 1
+        }
+
+        let call_type = 'video'
+
+        // Call handleSubmit function with USER_ID and send_to parameters
+        handleSubmit(USER_ID, send_to, call_type);
     })
 }
 
@@ -70,9 +91,10 @@ socket.onmessage = async function(e){
     let sent_by_id = data['sent_by']
     let send_to = data['send_to']
     let channel = data['channel']
+    let call_type = data['call_type']
     console.log('message', message)
     if(send_to===USER_ID && message_type==='call'){
-        handleSubmit2(send_to, sent_by_id, channel)
+        handleSubmit2(send_to, sent_by_id, channel, call_type)
     }
     else{
         newMessage(message, sent_by_id)
@@ -139,7 +161,7 @@ function newMessage(message, sent_by_id, thread_id) {
 
 // the below code fragment for calling:
 
-let handleSubmit = async (sent_by, send_to) => {
+let handleSubmit = async (sent_by, send_to, call_type) => {
         let room = sent_by + ' ' + 'to' + send_to
         let name = sent_by
 
@@ -155,6 +177,7 @@ let handleSubmit = async (sent_by, send_to) => {
         sessionStorage.setItem('appId', appId)
         sessionStorage.setItem('room', room)
         sessionStorage.setItem('name', name)
+        sessionStorage.setItem('callType', call_type)
 
         let message = input_message.val()
         if(USER_ID == 1){
@@ -168,7 +191,8 @@ let handleSubmit = async (sent_by, send_to) => {
             'message': '',
             'sent_by': sent_by,
             'send_to': send_to,
-            'channel': room
+            'channel': room,
+            'call_type': call_type
         }
         data = JSON.stringify(data)
 
@@ -180,7 +204,7 @@ let handleSubmit = async (sent_by, send_to) => {
 
 
 
-let handleSubmit2 = async (send_to, sent_by, channel) => {
+let handleSubmit2 = async (send_to, sent_by, channel, call_type) => {
         let room = channel
         let name = send_to
 
@@ -196,7 +220,9 @@ let handleSubmit2 = async (send_to, sent_by, channel) => {
         sessionStorage.setItem('appId', appId)
         sessionStorage.setItem('room', room)
         sessionStorage.setItem('name', name)
+        sessionStorage.setItem('callType', call_type)
         console.log("channel: ", room)
+        console.log("callType: ", call_type)
 //        msg_interface.html(`<div style="font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0;">
 //    <div class="call-interface" style="background-color: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
 //        <h2>Incoming Call</h2>

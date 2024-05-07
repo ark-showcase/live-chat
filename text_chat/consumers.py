@@ -36,6 +36,7 @@ class ChatConsumer(AsyncConsumer):
         sent_by_id = received_data.get('sent_by')
         sent_to_id = received_data.get('send_to')
         channel = received_data.get('channel')
+        call_type = received_data.get('call_type')
         if not msg_type:
             print('ERROR:: empty message')
             return False
@@ -56,7 +57,8 @@ class ChatConsumer(AsyncConsumer):
             'message_type': msg_type,
             'sent_by': self_user,
             'send_to': sent_to_user,
-            'channel': channel
+            'channel': channel,
+            'call_type': call_type
         }
 
         await self.channel_layer.group_send(
