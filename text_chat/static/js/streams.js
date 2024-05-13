@@ -5,6 +5,11 @@ let UID = sessionStorage.getItem('UID')
 let NAME = sessionStorage.getItem('name')
 let call_type = sessionStorage.getItem('callType')
 
+
+let timerInterval;
+let seconds = 0;
+let minutes = 0;
+
 const client = AgoraRTC.createClient({mode:'rtc', codec:'vp8'})
 
 if(call_type==='video'){
@@ -63,6 +68,8 @@ let handleUserJoined = async (user, mediaType) => {
     remoteUsers[user.uid] = user
     await client.subscribe(user, mediaType)
 
+
+
     if (call_type === 'video'){
         if (mediaType === 'video'){
             let player = document.getElementById(`user-container-${user.uid}`)
@@ -86,6 +93,10 @@ let handleUserJoined = async (user, mediaType) => {
         }
     }
     else{
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+
         if (mediaType === 'video'){
             let player = document.getElementById(`user-container-${user.uid}`)
             if (player != null){
@@ -182,6 +193,19 @@ let toggleMic = async (e) => {
             e.target.style.backgroundColor = 'rgb(255, 80, 80, 1)'
         }
     }
+}
+
+function updateTimer() {
+  seconds++;
+  if (seconds >= 60) {
+    seconds = 0;
+    minutes++;
+  }
+  document.getElementById('timer').innerText = formatTime(minutes) + ':' + formatTime(seconds);
+}
+
+function formatTime(time) {
+  return time < 10 ? '0' + time : time;
 }
 
 let createMember = async () => {

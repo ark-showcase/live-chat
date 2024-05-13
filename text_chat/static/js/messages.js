@@ -178,6 +178,7 @@ let handleSubmit = async (sent_by, send_to, call_type) => {
         sessionStorage.setItem('room', room)
         sessionStorage.setItem('name', name)
         sessionStorage.setItem('callType', call_type)
+        console.log("UID: ", UID)
 
         let message = input_message.val()
         if(USER_ID == 1){
@@ -223,6 +224,7 @@ let handleSubmit2 = async (send_to, sent_by, channel, call_type) => {
         sessionStorage.setItem('callType', call_type)
         console.log("channel: ", room)
         console.log("callType: ", call_type)
+        console.log("UID: ", UID)
 //        msg_interface.html(`<div style="font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0;">
 //    <div class="call-interface" style="background-color: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
 //        <h2>Incoming Call</h2>
